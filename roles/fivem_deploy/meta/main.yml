@@ -1,0 +1,25 @@
+---
+# fivem_deploy - Role Metadata
+
+galaxy_info:
+  author: "dukex <emersonalmeidax@gmail.com>"
+  description: "Deploy FiveM server data from Git repository"
+  license: "MIT"
+  min_ansible_version: "2.10"
+  platforms:
+    - name: Debian
+      versions:
+        - bookworm
+    - name: Ubuntu
+      versions:
+        - "jammy"
+        - "noble"
+  galaxy_tags:
+    - "fivem"
+    - "gameserver"
+    - "deploy"
+    - "git"
+
+dependencies:
+  - role: fivem_service
+  - role: fivem_database

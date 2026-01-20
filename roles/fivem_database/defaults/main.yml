@@ -1,0 +1,59 @@
+# ---
+# FiveM Server Database - Default Variables
+
+# Installation configuration
+install_mariadb: true
+mariadb_version: "latest"
+mariadb_packages:
+  - mariadb-server
+  - mariadb-client
+  - python3-pymysql
+
+# Root user configuration
+# mariadb_root_password: "changeme"
+mariadb_root_user: "root"
+
+# MariaDB server configuration
+mariadb_bind_address: "127.0.0.1"
+mariadb_port: 3306
+
+# Database configuration
+database_name: "fivem_server"
+database_user: "fivem"
+database_host: "localhost"
+database_port: 3306
+database_allowed_hosts:
+  - "localhost"
+  - "127.0.0.1"
+database_auth_plugin: "mysql_native_password"
+
+# MariaDB performance tuning
+mariadb_max_connections: 1000
+mariadb_max_allowed_packet: "256M"
+mariadb_thread_stack: "256K"
+mariadb_thread_cache_size: 128
+mariadb_myisam_recover_options: "BACKUP"
+mariadb_key_buffer_size: "256M"
+mariadb_table_open_cache: 4000
+mariadb_sort_buffer_size: "4M"
+mariadb_bulk_insert_buffer_size: "16M"
+mariadb_net_read_timeout: 30
+mariadb_net_write_timeout: 60
+mariadb_query_cache_limit: "2M"
+mariadb_query_cache_size: "32M"
+
+# InnoDB settings
+mariadb_innodb_buffer_pool_size: "100M"
+mariadb_innodb_log_file_size: "100M"
+mariadb_innodb_file_per_table: 1
+mariadb_innodb_flush_method: "O_DIRECT"
+
+# Security configuration
+enable_remote_access: false
+
+# Service configuration
+mariadb_service_enabled: true
+mariadb_service_started: true
+
+# Configuration file location
+mariadb_config_file: "/etc/mysql/mariadb.conf.d/50-server.cnf"

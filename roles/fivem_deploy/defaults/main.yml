@@ -1,0 +1,13 @@
+---
+# Defaults for fivem_server_deploy
+
+server_data_folder: "/opt/fivem/txData/game"
+git_repo_data: ""
+revision: "main"
+git_deploy_key: ""
+git_deploy_key_path: "/opt/fivem/fivem_repo_key"
+
+database_name: "fivem_server"
+database_user: "fivem"
+database_host: "localhost"
+database_port: 3306

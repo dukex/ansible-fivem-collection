@@ -1,0 +1,103 @@
+---
+# fivem_runtime - FiveM artifact download and installation
+
+- name: Check if version file exists
+  stat:
+    path: "{{ fivem_server_path }}/.version"
+  register: version_file
+  tags:
+    - runtime
+
+- name: Read current installed version
+  slurp:
+    src: "{{ fivem_server_path }}/.version"
+  register: current_version
+  when: version_file.stat.exists
+  tags:
+    - runtime
+
+- name: Decode and compare version
+  set_fact:
+    current_artifact_url: "{{ (current_version.content | b64decode | trim) if version_file.stat.exists else '' }}"
+    artifact_needs_update: "{{ fivem_force_download_artifacts | bool or not version_file.stat.exists or (current_version.content | b64decode | trim) != fivem_artifact_download_url }}"
+  tags:
+    - runtime
+
+- name: Create temporary file
+  ansible.builtin.tempfile:
+    state: directory
+    suffix: temp
+  register: tempdir
+  when: artifact_needs_update | bool
+  tags:
+    - runtime
+
+- name: Set temporary path
+  set_fact:
+    fivem_tmp_path: "{{ tempdir.path }}"
+  when: artifact_needs_update | bool
+  tags:
+    - runtime
+
+- name: Download FiveM artifact
+  get_url:
+    url: "{{ fivem_artifact_download_url }}"
+    dest: "{{ fivem_tmp_path }}/fx.tar.xz"
+    mode: "0644"
+  when: artifact_needs_update | bool
+  tags:
+    - runtime
+
+- name: Extract FiveM artifact into server path
+  become: true
+  unarchive:
+    src: "{{ fivem_tmp_path }}/fx.tar.xz"
+    dest: "{{ fivem_server_path }}"
+    remote_src: true
+  when: artifact_needs_update | bool
+  tags:
+    - runtime
+
+- name: Ensure ownership of FiveM server path
+  become: true
+  file:
+    path: "{{ fivem_server_path }}"
+    state: directory
+    owner: "{{ fivem_user }}"
+    group: "{{ fivem_group }}"
+    recurse: yes
+    mode: "0755"
+  when: artifact_needs_update | bool
+  tags:
+    - runtime
+
+- name: Write version file
+  become: true
+  copy:
+    content: "{{ fivem_artifact_download_url }}"
+    dest: "{{ fivem_server_path }}/.version"
+    owner: "{{ fivem_user }}"
+    group: "{{ fivem_group }}"
+    mode: "0644"
+  when: artifact_needs_update | bool
+  tags:
+    - runtime
+
+- name: Remove temporary FiveM artifact file
+  file:
+    path: "{{ fivem_tmp_path }}/fx.tar.xz"
+    state: absent
+  when: artifact_needs_update | bool
+  tags:
+    - runtime
+
+- name: Display version file status
+  debug:
+    msg: |
+      FiveM Artifact Status:
+      Current URL: {{ fivem_artifact_download_url }}
+      Version File Exists: {{ version_file.stat.exists }}
+      Force Download: {{ fivem_force_download_artifacts }}
+      Update Needed: {{ artifact_needs_update }}
+  tags:
+    - runtime

@@ -1,0 +1,14 @@
+---
+# fivem_nginx - Handlers
+
+- name: Reload nginx
+  become: true
+  systemd:
+    name: nginx
+    state: reloaded
+
+- name: Restart nginx
+  become: true
+  systemd:
+    name: nginx
+    state: restarted

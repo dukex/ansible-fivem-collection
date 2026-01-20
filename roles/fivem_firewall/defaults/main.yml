@@ -1,0 +1,11 @@
+---
+# fivem_firewall - Default Variables
+
+# Enable/disable firewall configuration
+fivem_firewall_enabled: true
+
+# Default firewall ports to open
+fivem_firewall_ports:
+  - port: 22
+    protocol: tcp
+    comment: "SSH"

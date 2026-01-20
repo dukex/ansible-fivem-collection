@@ -1,0 +1,8 @@
+---
+# fivem_tuning - Default Variables
+
+# Enable/disable performance tuning
+fivem_tuning_enabled: true
+
+# User (shared with fivem_common)
+fivem_user: "fivem"

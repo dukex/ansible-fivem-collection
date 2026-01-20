@@ -1,0 +1,42 @@
+---
+# MariaDB installation and service startup tasks
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  changed_when: false
+  when: install_mariadb | bool
+  tags:
+    - database
+    - database_install
+
+- name: Install MariaDB server packages
+  apt:
+    name: "{{ mariadb_packages }}"
+    state: present
+  register: mariadb_install
+  when: install_mariadb | bool
+  tags:
+    - database
+    - database_install
+
+- name: Ensure MariaDB is started and enabled
+  systemd:
+    name: mariadb
+    state: started
+    enabled: "{{ mariadb_service_enabled | bool }}"
+  when: install_mariadb | bool and mariadb_service_started | bool
+  tags:
+    - database
+    - database_install
+
+- name: Wait for MariaDB to be ready
+  wait_for:
+    port: "{{ mariadb_port }}"
+    delay: 1
+    timeout: 30
+  when: install_mariadb | bool and mariadb_install.changed
+  tags:
+    - database
+    - database_install

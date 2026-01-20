@@ -1,0 +1,16 @@
+[Unit]
+Description=FiveM Server
+After=network.target
+
+[Service]
+Type=simple
+User={{ fivem_user }}
+WorkingDirectory={{ fivem_server_path }}
+ExecStart={{ fivem_server_path }}/run.sh +set txAdminVerbose true
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

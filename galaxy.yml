@@ -1,0 +1,42 @@
+---
+namespace: "dukex"
+name: "fivem"
+version: "1.0.0-rc1"
+readme: "README.md"
+license:
+  - "MIT"
+
+authors:
+  - "dukex <emersonalmeidax@gmail.com>"
+
+description: >
+  Comprehensive Ansible collection for deploying and managing FiveM game servers
+  on Debian/Ubuntu Linux systems. Features modular roles for system setup, firewall,
+  Nginx reverse proxy, runtime management, systemd services, performance tuning,
+  MariaDB database, and Git-based deployment.
+
+tags:
+  - fivem
+  - gameserver
+  - deployment
+  - qbcore
+  - esx
+  - redm
+  - nginx
+  - mariadb
+  - ansible
+
+repository: "https://github.com/dukex/ansible-fivem-collection"
+documentation: "https://github.com/dukex/ansible-fivem-collection/blob/main/docs/roles.md"
+homepage: "https://github.com/dukex/ansible-fivem-collection"
+issues: "https://github.com/dukex/ansible-fivem-collection/issues"
+
+dependencies: {}
+
+build_ignore:
+  - ".git*"
+  - "tests/"
+  - "*.example"
+  - ".gitignore"
+  - "venv"
+  - "__pycache__"

@@ -1,0 +1,24 @@
+---
+# fivem_firewall - UFW firewall configuration for FiveM server
+
+- name: Enable UFW firewall
+  become: true
+  ufw:
+    state: enabled
+    policy: deny
+    direction: incoming
+  when: fivem_firewall_enabled | bool
+  tags:
+    - firewall
+
+- name: Configure UFW firewall rules
+  become: true
+  ufw:
+    rule: allow
+    port: "{{ item.port | string }}"
+    proto: "{{ item.protocol }}"
+    comment: "{{ item.comment | default('') }}"
+  loop: "{{ fivem_firewall_ports }}"
+  notify: Reload firewall
+  tags:
+    - firewall

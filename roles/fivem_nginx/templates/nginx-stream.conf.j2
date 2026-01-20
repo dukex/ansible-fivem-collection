@@ -1,0 +1,24 @@
+# FiveM Nginx Stream (TCP/UDP) Proxy Configuration
+# Managed by Ansible - Do not edit manually
+
+stream {
+    upstream fivem_tcp {
+        server 127.0.0.1:{{ fivem_server_port }};
+    }
+
+    upstream fivem_udp {
+        server 127.0.0.1:{{ fivem_server_port }};
+    }
+
+    # TCP proxy for FiveM
+    server {
+        listen {{ fivem_nginx_public_port }};
+        proxy_pass fivem_tcp;
+    }
+
+    # UDP proxy for FiveM
+    server {
+        listen {{ fivem_nginx_public_port }} udp reuseport;
+        proxy_pass fivem_udp;
+    }
+}

@@ -1,0 +1,67 @@
+# FiveM Nginx HTTP Proxy Configuration
+# Managed by Ansible - Do not edit manually
+# Works with Cloudflare in Full or Full (Strict) mode
+
+upstream fivem_backend {
+    server 127.0.0.1:{{ fivem_server_port }};
+}
+
+upstream txadmin_backend {
+    server 127.0.0.1:{{ fivem_txadmin_port }};
+}
+
+proxy_cache_path {{ fivem_nginx_cache_path }} levels=1:2 keys_zone=fivem_assets:48m max_size={{ fivem_nginx_cache_size }} inactive=2h;
+
+# HTTP to HTTPS redirect
+server {
+    listen 80;
+    listen [::]:80;
+    server_name {{ fivem_nginx_domain }};
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# HTTPS server
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name {{ fivem_nginx_domain }};
+
+    http2 on;
+
+    ssl_certificate /etc/nginx/ssl/fivem.crt;
+    ssl_certificate_key /etc/nginx/ssl/fivem.key;
+    ssl_session_timeout 1d;
+    ssl_session_cache shared:SSL:50m;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+
+    # FiveM server HTTP endpoints
+    location / {
+        proxy_pass http://fivem_backend;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_pass_request_headers on;
+    }
+
+    # FiveM asset files with caching
+    location /files/ {
+        proxy_pass http://fivem_backend$request_uri;
+        add_header X-Cache-Status $upstream_cache_status;
+        proxy_cache_lock on;
+        proxy_cache fivem_assets;
+        proxy_cache_valid 1y;
+        proxy_cache_key $request_uri$is_args$args;
+        proxy_cache_revalidate on;
+        proxy_cache_min_uses 1;
+    }
+
+    location /custom/ {
+        root {{ fivem_server_data_path }}/game;
+    }
+}

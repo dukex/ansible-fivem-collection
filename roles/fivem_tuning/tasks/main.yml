@@ -1,0 +1,53 @@
+---
+# fivem_tuning - System performance optimization for FiveM
+
+- name: Configure system limits for FiveM user
+  become: true
+  blockinfile:
+    path: /etc/security/limits.conf
+    marker: "# {mark} FiveM Server limits"
+    block: |
+      {{ fivem_user }}  soft  nofile  65536
+      {{ fivem_user }}  hard  nofile  65536
+      {{ fivem_user }}  soft  nproc   32768
+      {{ fivem_user }}  hard  nproc   32768
+    state: present
+  when: fivem_tuning_enabled | bool
+  tags:
+    - tuning
+
+- name: Apply system tuning for performance
+  become: true
+  sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: present
+    sysctl_set: yes
+  loop:
+    - name: "net.core.somaxconn"
+      value: "65535"
+    - name: "net.ipv4.tcp_max_syn_backlog"
+      value: "65535"
+    - name: "net.ipv4.ip_local_port_range"
+      value: "1024 65535"
+    - name: "net.ipv4.tcp_fin_timeout"
+      value: "30"
+  when: fivem_tuning_enabled | bool
+  tags:
+    - tuning
+
+- name: Set kernel parameters for network performance
+  become: true
+  sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: present
+    sysctl_set: yes
+  loop:
+    - name: "net.core.netdev_max_backlog"
+      value: "5000"
+    - name: "net.ipv4.tcp_tw_reuse"
+      value: "1"
+  when: fivem_tuning_enabled | bool
+  tags:
+    - tuning

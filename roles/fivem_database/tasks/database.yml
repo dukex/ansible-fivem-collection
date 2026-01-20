@@ -1,0 +1,32 @@
+---
+# Database and user creation tasks
+
+- name: Create FiveM database
+  mysql_db:
+    name: "{{ database_name }}"
+    state: present
+    login_user: "{{ mariadb_root_user }}"
+    login_password: "{{ mariadb_root_password }}"
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+  register: fivem_db_created
+  tags:
+    - database
+    - database_fivem
+
+- name: Create FiveM database user
+  mysql_user:
+    name: "{{ database_user }}"
+    password: "{{ database_password }}"
+    host: "{{ item }}"
+    login_user: "{{ mariadb_root_user }}"
+    login_password: "{{ mariadb_root_password }}"
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    priv: "{{ database_name }}.*:ALL"
+    state: present
+    update_password: always
+    append_privs: yes
+    plugin: "{{ database_auth_plugin | default(omit) }}"
+  loop: "{{ database_allowed_hosts }}"
+  tags:
+    - database
+    - database_fivem

@@ -1,0 +1,22 @@
+---
+galaxy_info:
+  author: dukex <emersonalmeidax@gmail.com>
+  description: System performance optimization for FiveM server
+  license: MIT
+  min_ansible_version: "2.10"
+  platforms:
+    - name: Debian
+      versions:
+        - bookworm
+    - name: Ubuntu
+      versions:
+        - jammy
+        - noble
+  galaxy_tags:
+    - fivem
+    - gameserver
+    - tuning
+    - performance
+    - sysctl
+
+dependencies: []

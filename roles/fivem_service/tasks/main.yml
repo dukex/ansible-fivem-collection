@@ -1,0 +1,50 @@
+---
+# fivem_service - Systemd service setup for FiveM
+
+- name: Remove default run.sh if it exists
+  become: true
+  file:
+    path: "{{ fivem_server_path }}/run.sh"
+    state: absent
+  tags:
+    - service
+
+- name: Deploy custom run.sh script
+  become: true
+  template:
+    src: run.sh.j2
+    dest: "{{ fivem_server_path }}/run.sh"
+    owner: "{{ fivem_user }}"
+    group: "{{ fivem_group }}"
+    mode: "0755"
+  notify: Restart fivem
+  tags:
+    - service
+
+- name: Create FiveM systemd service file
+  become: true
+  template:
+    src: fivem.service.j2
+    dest: /etc/systemd/system/fivem.service
+    mode: "0644"
+  notify:
+    - Reload systemd
+    - Restart fivem
+  tags:
+    - service
+
+- name: Reload systemd daemon
+  become: true
+  systemd:
+    daemon_reload: yes
+  tags:
+    - service
+
+- name: Enable and start FiveM service
+  become: true
+  systemd:
+    name: fivem
+    enabled: yes
+    state: started
+  tags:
+    - service

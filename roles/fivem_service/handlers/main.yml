@@ -1,0 +1,13 @@
+---
+# fivem_service - Handlers
+
+- name: Reload systemd
+  become: true
+  systemd:
+    daemon_reload: yes
+
+- name: Restart fivem
+  become: true
+  systemd:
+    name: fivem
+    state: restarted

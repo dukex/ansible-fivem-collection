@@ -1,0 +1,213 @@
+---
+# fivem_nginx - Nginx reverse proxy for FiveM server
+
+- name: Install Nginx and stream module
+  become: true
+  apt:
+    name:
+      - nginx
+      - libnginx-mod-stream
+    state: present
+    update_cache: true
+  tags:
+    - nginx
+
+- name: Ensure Nginx is enabled
+  become: true
+  systemd:
+    name: nginx
+    enabled: true
+  tags:
+    - nginx
+
+- name: Create Nginx cache directory
+  become: true
+  file:
+    path: "{{ fivem_nginx_cache_path }}"
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: "0755"
+  tags:
+    - nginx
+
+- name: Create SSL directory
+  become: true
+  file:
+    path: /etc/nginx/ssl
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+  tags:
+    - nginx
+
+- name: Generate self-signed certificate (for Cloudflare Full mode)
+  become: true
+  command: >
+    openssl req -x509 -nodes -days 3650 -newkey rsa:2048
+    -keyout /etc/nginx/ssl/fivem.key
+    -out /etc/nginx/ssl/fivem.crt
+    -subj "/CN={{ fivem_nginx_domain }}"
+  args:
+    creates: /etc/nginx/ssl/fivem.crt
+  when: not fivem_nginx_use_origin_cert | default(false) | bool
+  tags:
+    - nginx
+
+- name: Deploy Cloudflare Origin Certificate (if provided)
+  become: true
+  copy:
+    content: "{{ fivem_nginx_origin_cert }}"
+    dest: /etc/nginx/ssl/fivem.crt
+    owner: root
+    group: root
+    mode: "0644"
+  when: fivem_nginx_use_origin_cert | default(false) | bool and fivem_nginx_origin_cert is defined
+  notify: Reload nginx
+  tags:
+    - nginx
+
+- name: Deploy Cloudflare Origin Certificate Key (if provided)
+  become: true
+  copy:
+    content: "{{ fivem_nginx_origin_cert_key }}"
+    dest: /etc/nginx/ssl/fivem.key
+    owner: root
+    group: root
+    mode: "0600"
+  when: fivem_nginx_use_origin_cert | default(false) | bool and fivem_nginx_origin_cert_key is defined
+  notify: Reload nginx
+  tags:
+    - nginx
+
+- name: Deploy Nginx stream configuration (TCP/UDP proxy)
+  become: true
+  template:
+    src: nginx-stream.conf.j2
+    dest: /etc/nginx/modules-enabled/60-fivem-stream.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload nginx
+  tags:
+    - nginx
+
+- name: Deploy Nginx HTTP configuration (txAdmin and FiveM HTTP)
+  become: true
+  template:
+    src: nginx-fivem.conf.j2
+    dest: /etc/nginx/sites-available/fivem.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload nginx
+  tags:
+    - nginx
+
+- name: Enable Nginx FiveM site
+  become: true
+  file:
+    src: /etc/nginx/sites-available/fivem.conf
+    dest: /etc/nginx/sites-enabled/fivem.conf
+    state: link
+  notify: Reload nginx
+  tags:
+    - nginx
+
+- name: Add custom directory
+  become: true
+  file:
+    path: "{{ fivem_server_data_path }}/game/custom"
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: "0755"
+  tags:
+    - nginx
+
+- name: Copy custom files to Nginx directory
+  become: true
+  copy:
+    src: custom/
+    dest: "{{ fivem_server_data_path }}/game/custom/"
+    owner: www-data
+    group: www-data
+  failed_when: false
+  tags:
+    - nginx
+    - custom_files
+
+- name: Remove default Nginx site
+  become: true
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: Reload nginx
+  tags:
+    - nginx
+
+- name: Test Nginx configuration
+  become: true
+  command: nginx -t
+  register: nginx_test
+  changed_when: false
+  tags:
+    - nginx
+
+- name: Start Nginx
+  become: true
+  systemd:
+    name: nginx
+    state: started
+  when: nginx_test.rc == 0
+  tags:
+    - nginx
+
+- name: Open HTTP port in firewall
+  become: true
+  ufw:
+    rule: allow
+    port: "80"
+    proto: tcp
+    comment: "HTTP for Nginx"
+  when: fivem_nginx_configure_firewall | bool
+  tags:
+    - nginx
+    - firewall
+
+- name: Open HTTPS port in firewall
+  become: true
+  ufw:
+    rule: allow
+    port: "443"
+    proto: tcp
+    comment: "HTTPS for Nginx"
+  when: fivem_nginx_configure_firewall | bool
+  tags:
+    - nginx
+    - firewall
+
+- name: Open FiveM public TCP port in firewall
+  become: true
+  ufw:
+    rule: allow
+    port: "{{ fivem_nginx_public_port | string }}"
+    proto: tcp
+    comment: "FiveM TCP via Nginx"
+  when: fivem_nginx_configure_firewall | bool
+  tags:
+    - nginx
+    - firewall
+
+- name: Open FiveM public UDP port in firewall
+  become: true
+  ufw:
+    rule: allow
+    port: "{{ fivem_nginx_public_port | string }}"
+    proto: udp
+    comment: "FiveM UDP via Nginx"
+  when: fivem_nginx_configure_firewall | bool
+  tags:
+    - nginx
+    - firewall

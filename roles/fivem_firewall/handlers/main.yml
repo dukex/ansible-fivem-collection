@@ -1,0 +1,7 @@
+---
+# fivem_firewall - Handlers
+
+- name: Reload firewall
+  become: true
+  ufw:
+    state: reloaded

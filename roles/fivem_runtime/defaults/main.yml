@@ -1,0 +1,11 @@
+---
+# fivem_runtime - Default Variables
+
+# Artifact download configuration
+fivem_artifact_download_url: "https://runtime.fivem.net/artifacts/fivem/build_proot_linux/master/17000-e0ef7490f76a24505b8bac7065df2b7075e610ba/fx.tar.xz"
+fivem_force_download_artifacts: false
+
+# Server paths (shared with fivem_common)
+fivem_server_path: "/opt/fivem"
+fivem_user: "fivem"
+fivem_group: "fivem"

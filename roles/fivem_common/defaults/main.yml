@@ -1,0 +1,28 @@
+---
+# fivem_common - Default Variables
+
+# User and group configuration
+fivem_user: "fivem"
+fivem_group: "fivem"
+fivem_shell: "/bin/bash"
+fivem_home_dir: "/home/{{ fivem_user }}"
+
+# Server paths
+fivem_server_path: "/opt/fivem"
+fivem_server_data_path: "{{ fivem_server_path }}/txData"
+
+# System packages
+fivem_install_dependencies: true
+fivem_dependencies_packages:
+  - curl
+  - wget
+  - git
+  - unzip
+  - xz-utils
+  - build-essential
+  - ca-certificates
+  - apt-transport-https
+  - lsb-release
+  - gnupg2
+  - neovim
+  - ufw

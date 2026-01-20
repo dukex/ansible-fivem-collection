@@ -1,0 +1,23 @@
+---
+galaxy_info:
+  author: dukex <emersonalmeidax@gmail.com>
+  description: Systemd service setup for FiveM server
+  license: MIT
+  min_ansible_version: "2.10"
+  platforms:
+    - name: Debian
+      versions:
+        - bookworm
+    - name: Ubuntu
+      versions:
+        - jammy
+        - noble
+  galaxy_tags:
+    - fivem
+    - gameserver
+    - service
+    - systemd
+
+dependencies:
+  - role: fivem_common
+  - role: fivem_runtime

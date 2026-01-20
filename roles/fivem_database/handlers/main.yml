@@ -1,0 +1,15 @@
+---
+# FiveM Server Database - Handlers
+
+- name: Restart MariaDB
+  systemd:
+    name: mariadb
+    state: restarted
+    enabled: yes
+  listen: "restart mariadb"
+
+- name: Reload MariaDB
+  systemd:
+    name: mariadb
+    state: reloaded
+  listen: "reload mariadb"

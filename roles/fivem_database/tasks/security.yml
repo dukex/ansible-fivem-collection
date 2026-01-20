@@ -1,0 +1,60 @@
+---
+# MariaDB security hardening tasks
+
+- name: Check if root password is already set
+  shell: mysql -u root -e "SELECT 1" 2>&1 | grep -q "Access denied"
+  register: root_password_check
+  failed_when: false
+  changed_when: false
+  when: install_mariadb | bool
+  tags:
+    - database
+    - database_security
+
+- name: Set MariaDB root password (fresh install)
+  mysql_user:
+    name: root
+    password: "{{ mariadb_root_password }}"
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    state: present
+  notify: Restart MariaDB
+  when: install_mariadb | bool and root_password_check.rc != 0
+  tags:
+    - database
+    - database_security
+
+- name: Remove anonymous MariaDB users
+  mysql_user:
+    name: ""
+    host: "{{ item }}"
+    state: absent
+    login_user: "{{ mariadb_root_user }}"
+    login_password: "{{ mariadb_root_password }}"
+  when: install_mariadb | bool
+  loop:
+    - localhost
+    - "{{ ansible_facts['fqdn'] }}"
+  tags:
+    - database
+    - database_security
+
+- name: Disable MariaDB test database
+  mysql_db:
+    name: test
+    state: absent
+    login_user: "{{ mariadb_root_user }}"
+    login_password: "{{ mariadb_root_password }}"
+  tags:
+    - database
+    - database_security
+
+- name: Disallow root login remotely
+  mysql_query:
+    login_user: root
+    login_password: "{{ mariadb_root_password }}"
+    query: DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1')
+  ignore_errors: true
+  when: install_mariadb | bool
+  tags:
+    - database
+    - database_security

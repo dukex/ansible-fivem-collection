@@ -1,0 +1,37 @@
+---
+# FiveM Server MariaDB - Main Tasks
+
+- name: Include installation tasks
+  include_tasks: install.yml
+  tags:
+    - database
+    - database_install
+
+- name: Include security tasks
+  include_tasks: security.yml
+  tags:
+    - database
+    - database_security
+
+- name: Include database creation tasks
+  include_tasks: database.yml
+  tags:
+    - database
+    - database_fivem
+
+- name: Include configuration tasks
+  include_tasks: configuration.yml
+  tags:
+    - database
+    - database_configuration
+
+- name: Display MariaDB setup completion message
+  debug:
+    msg: |
+      MariaDB Setup Complete!
+      =======================
+      Root User: {{ mariadb_root_user }}
+      Database: {{ database_name }}
+      Database User: {{ database_user }}
+      Bind Address: {{ mariadb_bind_address }}
+      Port: {{ mariadb_port }}

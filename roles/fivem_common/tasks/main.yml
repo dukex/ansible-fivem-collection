@@ -1,0 +1,50 @@
+---
+# fivem_common - Base system setup for FiveM server
+
+- name: Install system dependencies
+  become: true
+  apt:
+    name: "{{ fivem_dependencies_packages }}"
+    state: present
+    update_cache: true
+  when: fivem_install_dependencies | bool
+  tags:
+    - common
+    - packages
+
+- name: Create FiveM group
+  become: true
+  group:
+    name: "{{ fivem_group }}"
+    state: present
+  tags:
+    - common
+    - user
+
+- name: Create FiveM user
+  become: true
+  user:
+    name: "{{ fivem_user }}"
+    group: "{{ fivem_group }}"
+    home: "{{ fivem_home_dir }}"
+    shell: "{{ fivem_shell }}"
+    createhome: yes
+    state: present
+  tags:
+    - common
+    - user
+
+- name: Create FiveM directory structure
+  become: true
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ fivem_user }}"
+    group: "{{ fivem_group }}"
+    mode: "0755"
+  loop:
+    - "{{ fivem_server_path }}"
+    - "{{ fivem_server_data_path }}"
+  tags:
+    - common
+    - directories

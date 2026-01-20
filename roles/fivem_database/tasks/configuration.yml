@@ -1,0 +1,73 @@
+---
+# MariaDB configuration and tuning tasks
+
+- name: Configure MariaDB server
+  lineinfile:
+    path: "{{ mariadb_config_file }}"
+    regexp: "^#?{{ item.key }}"
+    line: "{{ item.key }} = {{ item.value }}"
+    state: present
+  loop:
+    - key: "bind-address"
+      value: "{{ mariadb_bind_address }}"
+    - key: "max_connections"
+      value: "{{ mariadb_max_connections }}"
+    - key: "max_allowed_packet"
+      value: "{{ mariadb_max_allowed_packet }}"
+    - key: "thread_stack"
+      value: "{{ mariadb_thread_stack }}"
+    - key: "thread_cache_size"
+      value: "{{ mariadb_thread_cache_size }}"
+    - key: "key_buffer_size"
+      value: "{{ mariadb_key_buffer_size }}"
+    - key: "table_open_cache"
+      value: "{{ mariadb_table_open_cache }}"
+    - key: "sort_buffer_size"
+      value: "{{ mariadb_sort_buffer_size }}"
+    - key: "bulk_insert_buffer_size"
+      value: "{{ mariadb_bulk_insert_buffer_size }}"
+    - key: "net_read_timeout"
+      value: "{{ mariadb_net_read_timeout }}"
+    - key: "net_write_timeout"
+      value: "{{ mariadb_net_write_timeout }}"
+  notify: Restart MariaDB
+  when: install_mariadb | bool
+  tags:
+    - database
+    - database_configuration
+
+- name: Enable MariaDB boolean options
+  lineinfile:
+    path: "{{ mariadb_config_file }}"
+    regexp: "^#?{{ item }}"
+    line: "{{ item }}"
+    state: present
+  loop:
+    - "skip-external-locking"
+    - "skip-name-resolve"
+  notify: Restart MariaDB
+  when: install_mariadb | bool
+  tags:
+    - database
+    - database_configuration
+
+- name: Configure MariaDB InnoDB settings
+  lineinfile:
+    path: "{{ mariadb_config_file }}"
+    regexp: "^#?{{ item.key }}"
+    line: "{{ item.key }} = {{ item.value }}"
+    state: present
+  loop:
+    - key: "innodb_buffer_pool_size"
+      value: "{{ mariadb_innodb_buffer_pool_size }}"
+    - key: "innodb_log_file_size"
+      value: "{{ mariadb_innodb_log_file_size }}"
+    - key: "innodb_file_per_table"
+      value: "{{ mariadb_innodb_file_per_table }}"
+    - key: "innodb_flush_method"
+      value: "{{ mariadb_innodb_flush_method }}"
+  notify: Restart MariaDB
+  when: install_mariadb | bool
+  tags:
+    - database
+    - database_configuration

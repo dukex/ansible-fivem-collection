@@ -1,0 +1,215 @@
+---
+# Deploy FiveM server data from Git
+
+- name: Ensure server data folder exists
+  file:
+    path: "{{ server_data_folder }}"
+    state: directory
+    mode: "0755"
+  tags:
+    - config
+    - deploy
+    - deploy_data
+
+- name: Generate SSH deploy key on server
+  command: ssh-keygen -t ed25519 -C "fivem-deploy@{{ ansible_facts['hostname'] }}" -f {{ git_deploy_key_path }} -N ""
+  args:
+    creates: "{{ git_deploy_key_path }}"
+  when: git_deploy_key | length == 0
+  tags:
+    - deploy
+    - deploy_data
+
+- name: Read generated public key
+  slurp:
+    src: "{{ git_deploy_key_path }}.pub"
+  register: deploy_public_key
+  when: git_deploy_key | length == 0
+  tags:
+    - deploy
+    - deploy_data
+
+- name: Display public key to add to GitLab/GitHub
+  debug:
+    msg: |
+      Add this deploy key to your GitLab/GitHub repository:
+      {{ deploy_public_key.content | b64decode }}
+  when: git_deploy_key | length == 0 and deploy_public_key is defined
+  tags:
+    - deploy
+    - deploy_data
+
+- name: Write deploy key for private repo (optional)
+  copy:
+    content: "{{ git_deploy_key }}\n"
+    dest: "{{ git_deploy_key_path }}"
+    mode: "0600"
+  when: git_deploy_key | length > 0
+  no_log: true
+  tags:
+    - deploy
+    - deploy_data
+
+- name: Fix deploy key permissions and format
+  file:
+    path: "{{ git_deploy_key_path }}"
+    mode: "0400"
+    owner: "{{ ansible_user_id }}"
+  when: git_deploy_key | length > 0
+  tags:
+    - deploy
+    - deploy_data
+
+- name: Create temporary file
+  ansible.builtin.tempfile:
+    state: directory
+    suffix: temp
+  register: tempdir
+  tags:
+    - resources
+    - deploy
+    - deploy_data
+
+- name: Checkout or update server data repository
+  git:
+    repo: "{{ git_repo_data }}"
+    dest: "{{ tempdir.path }}/checkout"
+    version: "{{ revision }}"
+    force: yes
+    update: yes
+    recursive: yes
+    key_file: "{{ git_deploy_key_path }}"
+    accept_hostkey: yes
+    single_branch: yes
+  when: git_repo_data | length > 0
+  tags:
+    - resources
+    - deploy
+    - deploy_data
+
+- name: Backup existing server data resources
+  copy:
+    src: "{{ server_data_folder }}/resources"
+    dest: "{{ tempdir.path }}/backup-resources"
+    remote_src: yes
+    owner: "{{ fivem_user }}"
+    group: "{{ fivem_group }}"
+  when: git_repo_data | length > 0
+  tags:
+    - resources
+    - deploy
+    - deploy_data
+
+- name: Remove the old file
+  file:
+    path: "{{ server_data_folder }}/resources"
+    state: absent
+  tags:
+    - resources
+    - deploy
+    - deploy_data
+
+- name: Synchronize server data resources to server data folder
+  copy:
+    src: "{{ tempdir.path }}/checkout/resources"
+    dest: "{{ server_data_folder }}"
+    owner: "{{ fivem_user }}"
+    group: "{{ fivem_group }}"
+    remote_src: yes
+  when: git_repo_data | length > 0
+  tags:
+    - resources
+    - deploy
+    - deploy_data
+
+- name: Template ox.cfg to server data folder
+  template:
+    src: "../config/ox.cfg.j2"
+    dest: "{{ server_data_folder }}/ox.cfg"
+    mode: "0644"
+  when: git_repo_data | length > 0
+  tags:
+    - config
+    - deploy
+    - deploy_data
+
+- name: Template permissions.cfg to server data folder
+  template:
+    src: "../config/permissions.cfg.j2"
+    dest: "{{ server_data_folder }}/permissions.cfg"
+    mode: "0644"
+  when: git_repo_data | length > 0
+  tags:
+    - config
+    - deploy
+    - deploy_data
+
+- name: Template server.cfg to server data folder
+  template:
+    src: "../config/server.cfg.j2"
+    dest: "{{ server_data_folder }}/server.cfg"
+    mode: "0644"
+  when: git_repo_data | length > 0
+  tags:
+    - config
+    - deploy
+    - deploy_data
+
+- name: Template config.json
+  template:
+    src: "config.json.j2"
+    dest: "{{ server_data_folder }}/../default/config.json"
+    mode: "0644"
+  when: git_repo_data | length > 0
+  tags:
+    - config
+    - deploy
+    - deploy_data
+
+- name: Remove temporary directory
+  file:
+    path: "{{ tempdir.path }}"
+    state: absent
+  when: git_repo_data | length > 0
+  tags:
+    - resources
+    - deploy
+    - deploy_data
+
+- name: Remove temporary directory
+  file:
+    path: "{{ server_data_folder }}/cache"
+    state: absent
+  when: git_repo_data | length > 0
+  tags:
+    - resources
+    - deploy
+    - deploy_data
+
+- name: Logo file deployment
+  copy:
+    src: "../config/logo.png"
+    dest: "{{ server_data_folder }}/logo.png"
+    mode: "0644"
+    owner: "{{ fivem_user }}"
+    group: "{{ fivem_group }}"
+  when: git_repo_data | length > 0
+  tags:
+    - config
+    - deploy
+    - deploy_data
+
+- name: Ensure ownership of FiveM server path
+  become: true
+  file:
+    path: "{{ fivem_server_path }}"
+    state: directory
+    owner: "{{ fivem_user }}"
+    group: "{{ fivem_group }}"
+    recurse: yes
+    mode: "0755"
+  tags:
+    - resources
+    - deploy
+    - deploy_data
+    - config

@@ -1,0 +1,7 @@
+---
+# fivem_service - Default Variables
+
+# Server paths (shared with fivem_common)
+fivem_server_path: "/opt/fivem"
+fivem_user: "fivem"
+fivem_group: "fivem"

@@ -1,0 +1,25 @@
+---
+# fivem_database - Role Metadata
+
+galaxy_info:
+  author: "dukex <emersonalmeidax@gmail.com>"
+  description: "Install and configure MariaDB database for FiveM server"
+  license: "MIT"
+  min_ansible_version: "2.10"
+  platforms:
+    - name: Debian
+      versions:
+        - "bookworm"
+    - name: Ubuntu
+      versions:
+        - "jammy"
+        - "noble"
+  galaxy_tags:
+    - "fivem"
+    - "gameserver"
+    - "database"
+    - "mariadb"
+    - "mysql"
+
+dependencies:
+  - role: fivem_common
